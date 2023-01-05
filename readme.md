@@ -88,20 +88,20 @@ There is another folder in public called `json`. This folder contains two files:
 * [Breakout.json](./public/assets/json/breakout.json): this file contains the information to get a specific frame from the `breakout.png`image.
 * [Levels.json](./public/assets/json/levels.json): this file help us to build all the levels for our game. This is structured like this to control all the details of our levels from this json file.
   * `lives`: number of lives the player will have for this level.
-        - `walls`: this has an array of walls for the level, with the position, rotation and scale.
-        - `paddles`: it also possible to create a level with several paddles. This array contains the position of the paddles and other important information.
-        - `brickPosition`: here we defined the position of each brick structured by rows. The `brickPosition` variable contains an array of rows, where each row defines the position for the bricks. So that the row "[1,1,1,0,0,0,0,0,0,0,0]" will have bricks in the first, second and third position, but nothing in the rest.
-        - `brickColor`: same mechanism as the `brickPosition` but to indicate the color of each brick.
+  *  `walls`: this has an array of walls for the level, with the position, rotation and scale.
+  *  `paddles`: it also possible to create a level with several paddles. This array contains the position of the paddles and other important information.
+  *  `brickPosition`: here we defined the position of each brick structured by rows. The `brickPosition` variable contains an array of rows, where each row defines the position for the bricks. So that the row "[1,1,1,0,0,0,0,0,0,0,0]" will have bricks in the first, second and third position, but nothing in the rest.
+  *  `brickColor`: same mechanism as the `brickPosition` but to indicate the color of each brick.
 
 ### Src folder
 
 TypeScript files are intended for the `src` folder. `main.ts` is the entry point referenced by `index.html`.
 
 In the `scenes` folder are saved all the scenes for the game:
-    - [MainMenu.ts](./src/scenes/MainMenu.ts): First scene to be shown to the player
-    - [Breakout.ts](./src/scenes/Breakout.ts): Main scene where the game will take place
-    - [GameOver.ts](./src/scenes/GameOver.ts): Scene to be shown when the player loses
-    - [Victory.ts](./src/scenes/Victory.ts): Scene to be shown when the player wins the game
+* [MainMenu.ts](./src/scenes/MainMenu.ts): First scene to be shown to the player
+* [Breakout.ts](./src/scenes/Breakout.ts): Main scene where the game will take place
+* [GameOver.ts](./src/scenes/GameOver.ts): Scene to be shown when the player loses
+* [Victory.ts](./src/scenes/Victory.ts): Scene to be shown when the player wins the game
 
 The `scripts` folder contains the class scripts with the proper information to create he objects for the game:
     - [Ball](./src/scripts/Ball.ts): It has the configuration to create a ball
