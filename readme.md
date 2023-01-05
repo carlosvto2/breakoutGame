@@ -104,11 +104,11 @@ In the `scenes` folder are saved all the scenes for the game:
 * [Victory.ts](./src/scenes/Victory.ts): Scene to be shown when the player wins the game
 
 The `scripts` folder contains the class scripts with the proper information to create he objects for the game:
-    - [Ball](./src/scripts/Ball.ts): It has the configuration to create a ball
-    - [Brick](./src/scripts/Brick.ts): It has the configuration to create a brick
-    - [Level](./src/scripts/Level.ts): It has the configuration to prepare and create a whole level
-    - [Paddle](./src/scripts/Paddle.ts): It has the configuration to create a paddle
-    - [Buff](./src/scripts/Buff.ts): Buff to create a new ball
+* [Ball](./src/scripts/Ball.ts): It has the configuration to create a ball
+* [Brick](./src/scripts/Brick.ts): It has the configuration to create a brick
+* [Level](./src/scripts/Level.ts): It has the configuration to prepare and create a whole level
+* [Paddle](./src/scripts/Paddle.ts): It has the configuration to create a paddle
+* [Buff](./src/scripts/Buff.ts): Buff to create a new ball
 
 
 ## Dev Server Port
