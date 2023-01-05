@@ -35,6 +35,7 @@ export default class Breakout extends Phaser.Scene
         this.load.image(BALL2, 'assets/images/planet2.png')
         this.load.image(BALL3, 'assets/images/planet3.png')
         this.load.image("paddle", 'assets/images/paddle.png')
+        this.load.image("buff", 'assets/images/ufo.png')
         this.load.image("paddleRotated", 'assets/images/paddleRotated.png')
 
         // load the json files for the levels
@@ -50,7 +51,6 @@ export default class Breakout extends Phaser.Scene
         this.physics.world.setBoundsCollision(false, false, false, false)
         this.add.image(400, 300, BACKGROUND)
 
-        
 
         this.scoreText = this.add.text(15, 15, 'Score: 0', {
             color: 'yellow',
@@ -69,13 +69,30 @@ export default class Breakout extends Phaser.Scene
 
     update()
     {
-        if(!this.level?.ballObj)
+        if(!this.level)
             return
 
-        this.level.ballObj.rotation+=.02
-        if(this.level.ballObj?.y > 600 || this.level.ballObj?.y < 0 || this.level.ballObj?.x > 790 || this.level.ballObj?.x < 0)
+        var ballGroupLength = this.level.ballGroup.getLength()
+        // get all the balls in the scene
+        for(var i = ballGroupLength - 1; i >= 0; i--)
         {
-            this.level.ballObj.resetBall(this.level)
+            var ball = this.level.ballGroup.children.entries[i]
+            // rotate the balls
+            ball.body.gameObject.rotation+=.02
+            if(ball.body.gameObject.y > 600 || ball.body.gameObject.y < 0 || ball.body.gameObject.x > 790 || ball.body.gameObject.x < 0)
+            {
+                // if the ball is out of bounds
+                if(ballGroupLength > 1)
+                {
+                    //if there is more than one ball in the scene, destroy it
+                    ball.destroy()
+                }
+                else
+                {
+                    //if there is just one ball, reset it
+                    ball.body.gameObject.resetBall(this.level, false)
+                }
+            }
         }
     }
 
@@ -91,7 +108,7 @@ export default class Breakout extends Phaser.Scene
             if(this.level?.gameOver == true)
                 return
             // if the paddleGroup and the ball exist
-            if(!this.level?.paddleGroup || !this.level.ballObj)
+            if(!this.level?.paddleGroup || !this.level.ballGroup)
                 return
             
             // get all the available paddles and move them along with the mouse movement
@@ -106,9 +123,9 @@ export default class Breakout extends Phaser.Scene
                     paddleSprite.x = Phaser.Math.Clamp(event.x, paddleSprite.screenLimitLeft, paddleSprite.screenLimitRight)
     
                     // if the ball is still on the paddle, move the ball with it
-                    if(this.level.ballObj?.getData('onPaddle'))
+                    if(this.level.ballGroup.children.entries[0].getData('onPaddle'))
                     {
-                        this.level.ballObj.x = this.level.paddleGroup.children.entries[i].body.gameObject.x
+                        this.level.ballGroup.children.entries[0].body.gameObject.x = this.level.paddleGroup.children.entries[i].body.gameObject.x
                     }
                 }
                 else
@@ -122,11 +139,11 @@ export default class Breakout extends Phaser.Scene
 
         // event to trigger the ball when the mouse button is pressed
         onmousedown = (event: MouseEvent) => {
-            if(!this.level?.ballObj)
+            if(!this.level?.ballGroup.children)
                 return
-            if(this.level?.ballObj.getData('onPaddle')){
-                this.level?.ballObj.setVelocity(this.initVelocityX, this.initVelocityY)
-                this.level?.ballObj.setData('onPaddle', false)
+            if(this.level.ballGroup.children.entries[0].getData('onPaddle')){
+                this.level.ballGroup.children.entries[0].body.gameObject.setVelocity(this.initVelocityX, this.initVelocityY)
+                this.level.ballGroup.children.entries[0].setData('onPaddle', false)
             }
         }
     }

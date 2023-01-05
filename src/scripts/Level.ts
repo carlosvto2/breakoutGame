@@ -2,6 +2,7 @@ import Phaser, { GameObjects, Physics, Scene } from 'phaser'
 import BallClass from './Ball'
 import BrickClass from './Brick'
 import PaddleClass from './Paddle'
+import BuffClass from './Buff'
 
 const HIT = 'hit'
 const BALL = 'ball'
@@ -17,6 +18,7 @@ export default class Level
 	private scene: Scene
 	private brickGroup: Phaser.Physics.Arcade.StaticGroup
 	public paddleGroup: Phaser.Physics.Arcade.Group
+	public ballGroup: Phaser.Physics.Arcade.Group
 	public ballObj?: BallClass
 	private assetsJson: string
 
@@ -45,19 +47,30 @@ export default class Level
 
 		this.scene = scene
 		this.levelNumber = 0
-		this.brickGroup = this.scene.physics.add.staticGroup({
-			classType: BrickClass,
-			runChildUpdate: true
-		});
 
 		this.assetsJson = assets
 		this.score = score
 		this.scoreText = scoreText
 
+		// group of bricks with the classType "BrickClass"
+		this.brickGroup = this.scene.physics.add.staticGroup({
+			classType: BrickClass,
+			runChildUpdate: true
+		})
+
 		// group of paddles with the classType "PaddleClass" and immovable set to "true"
 		this.paddleGroup = this.scene.physics.add.group({
 			classType: PaddleClass,
 			immovable: true
+		})
+
+		// group of balls with the classType "BallClass"
+		this.ballGroup = this.scene.physics.add.group({
+			classType: BallClass,
+			bounceX: 1,
+			bounceY: 1,
+			velocityX: 300,
+			velocityY: -300
 		})
 
 		this.walls = scene.physics.add.staticGroup()
@@ -87,8 +100,9 @@ export default class Level
 		// read the json file for the levels
         var jsonLevels = this.scene.cache.json.get('levels')
 		this.levelInfo = jsonLevels.levels[this.levelNumber]
+		this.destroyExistingBalls()
 
-		this.createBall()
+		this.createBall(true)
 		
         // generate the bricks for the next level
         this.generateBricks()
@@ -98,17 +112,17 @@ export default class Level
 
 		if(!this.paddleGroup)
 			return
-		this.ballObj?.setPaddle(this.paddleGroup)
      
 		// reset the ball --> the parameter is null, because in this case we dont need to reduce the lives
-        this.ballObj?.resetBall(null)
+        this.ballObj?.resetBall(this, true)
         this.levelNumber++
 	}
 
 	/**
         * Create a random ball
+		* @param {boolean} setOnPaddle - Boolean to specify if the ball needs to be generated on the paddle
     */
-	private createBall()
+	private createBall(setOnPaddle: boolean)
 	{
 		var randomNumber = Math.floor(Math.random() * ((3 - 1) - 0 + 1))
 		var ball
@@ -125,8 +139,9 @@ export default class Level
 				ball = BALL3
 				break;
 		}
-		// create the ball
-        this.ballObj = new BallClass(this.scene, 400, 550, ball)
+		// create the ball and add it to the ballGroup
+        this.ballObj = new BallClass(this.scene, 400, 450, ball, setOnPaddle)
+		this.ballGroup.add(this.ballObj)
 	}
 
 	/**
@@ -154,11 +169,9 @@ export default class Level
 			let paddleObj = new PaddleClass(this.scene, posX, posY, screenLimitLeft, screenLimitRight, movement, texture, scaleX, scaleY)
 			this.paddleGroup.add(paddleObj, true)
 		}
-		if(!this.ballObj)
-			return
 			
         // set the collider to trigger the "paddleHit" function when the ball hits the paddle
-        this.scene.physics.add.collider(this.ballObj, this.paddleGroup, this.paddleHit, undefined, this)
+        this.scene.physics.add.collider(this.ballGroup, this.paddleGroup, this.paddleHit, undefined, this)
     }
 
 	/**
@@ -181,11 +194,8 @@ export default class Level
 
 			this.walls.create(posX, posY, texture).setScale(scaleX,scaleY).refreshBody()
 		}
-        
-		if(!this.ballObj)
-			return
 
-		this.scene.physics.add.collider(this.ballObj, this.walls)
+		this.scene.physics.add.collider(this.ballGroup, this.walls)
 		this.scene.physics.add.collider(this.paddleGroup, this.walls)
 	}
 
@@ -261,11 +271,9 @@ export default class Level
             firstBrickPosX = 90
         }
 
-        if(!this.ballObj)
-            return
 
         // set the collider to trigger the "brickHit" function when the ball hits a brick
-        this.scene.physics.add.collider(this.ballObj, this.brickGroup, this.brickHit, undefined, this)
+        this.scene.physics.add.collider(this.ballGroup, this.brickGroup, this.brickHit, undefined, this)
 	}
 
 
@@ -280,8 +288,6 @@ export default class Level
 		// if the number of hits for this brick is 1, disable it
 		if(brickObj.hits == 1)
 		{
-			// disable the body of the brick
-			brickObj.disableBody(true, true)
 
 			// create a small particle effect where the brick was destroyed, make an animation and destroy it at the end
 			var image = this.scene.add.image(brickObj.x, brickObj.y, this.assetsJson, 'particle1')
@@ -302,6 +308,12 @@ export default class Level
 			// get brick points and add it to the current score
 			this.score += brickObj.getBrickPoints()
 			this.scoreText?.setText(`Score: ${this.score}`)
+
+			// spawn an extra ball buff
+			this.extraBallBuff(brickObj.x, brickObj.y)
+
+			// destroy the brick
+			brickObj.destroy()
 		}
 		else
 		{
@@ -310,17 +322,16 @@ export default class Level
 		}
 
         // if the number of bricks is 0, finish the level
-		// console.log(this.scene.children.list.filter(x => x instanceof Phaser.Physics.Arcade.Sprite))
-        if(this.brickGroup?.countActive() == 0){
+		if(this.brickGroup?.getLength() == 0){
             this.finishLevel()
         }
     }
 
 
 	/**
-    * Function called when the ball hits the paddle
-    * @param {object} ball - Ball hitting the paddle
-    * @param {object} paddle - Paddle hit by the ball
+		* Function called when the ball hits the paddle
+		* @param {object} ball - Ball hitting the paddle
+		* @param {object} paddle - Paddle hit by the ball
     */
     private paddleHit(ball: Phaser.GameObjects.GameObject, paddle: Phaser.GameObjects.GameObject){
         var difference = 0
@@ -387,6 +398,55 @@ export default class Level
 		else
 		{
 			this.createLevel()
+		}
+	}
+
+	/**
+    	* Spawns a buff
+		* @param {integer} posX - X Position where the brick was broken
+		* @param {integer} posY - Y Position where the brick was broken
+    */
+	private extraBallBuff(posX: integer, posY: integer)
+	{
+		
+		// get a random number to get a Buff
+		var randomNumber = Math.floor(Math.random() * ((10 - 1) - 0 + 1))
+
+		// if the random number is 1 we get a buff (10%)
+		if(randomNumber == 1)
+		{
+			// create the buff for the ball spawn
+			var buff = new BuffClass(this.scene, posX, posY, "buff")
+			// destroy the buff after 3 seconds
+			this.scene.time.delayedCall(3000, buff.destroy, [], buff)
+			// collision between the buff and the paddle
+			this.scene.physics.add.collider(buff, this.paddleGroup, this.buffHit, undefined, this)
+		}
+		
+	}
+
+	/**
+		* Function called when the buff hits the paddle to create a new ball
+		* @param {object} paddle - paddle
+		* @param {object} buff - buff
+    */
+	private buffHit(buff: Phaser.GameObjects.GameObject, paddle: Phaser.GameObjects.GameObject){
+		buff.destroy()
+		this.createBall(false)
+	}
+
+
+	/**
+		* Destroy all the balls in the scene
+    */
+	private destroyExistingBalls()
+	{
+		var ballGroupLength = this.ballGroup.getLength()
+		
+        // get all the balls in the scene
+        for(var i = ballGroupLength - 1; i >= 0; i--)
+        {
+			this.ballGroup.children.entries[i].destroy()
 		}
 	}
 }

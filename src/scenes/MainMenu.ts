@@ -29,8 +29,10 @@ export default class GameOver extends Phaser.Scene
     create()
     {
         this.add.image(400, 300, BACKGROUND)
-        this.ballObj = new BallClass(this, 200, 550, BALL)
+        this.ballObj = new BallClass(this, 200, 550, BALL, false)
         this.ballObj.setVelocity(300)
+        this.ballObj.setCollideWorldBounds(true)
+        this.ballObj.setBounce(1)
 
         // define hit audio and adapt the volume
 		this.music = this.sound.add(MUSIC, {volume: 0.3})

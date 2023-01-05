@@ -1,11 +1,9 @@
 # 🚨 NOTE 🚨
 ## Prerequisites
 
-You'll need [Node.js](https://nodejs.org/en/), [npm](https://www.npmjs.com/), and [Parcel](https://parceljs.org/) installed.
+You'll need Node.js, npm and Parcel installed.
 
-It is highly recommended to use [Node Version Manager](https://github.com/nvm-sh/nvm) (nvm) to install Node.js and npm.
-
-For Windows users there is [Node Version Manager for Windows](https://github.com/coreybutler/nvm-windows).
+It is highly recommended to use [Node Version Manager](https://github.com/nvm-sh/nvm) (nvm) to install Node.js and npm and [Node Version Manager for Windows](https://github.com/coreybutler/nvm-windows) for Windows users (this project was tested with windows).
 
 Install Node.js and `npm` with `nvm`:
 
@@ -15,7 +13,7 @@ nvm install node
 nvm use node
 ```
 
-Replace 'node' with 'latest' for `nvm-windows`.
+Replace 'node' with 'latest' for `nvm-windows` (nvm install latest).
 
 Then install Parcel:
 
